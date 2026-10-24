@@ -18,8 +18,13 @@ h1{font-size:22px;margin:0 0 4px}
 label{display:block;font-size:12px;color:#4b5563;margin-bottom:10px}
 input,select,textarea{width:100%;margin-top:4px;padding:9px 10px;border:1px solid #c5ccd8;border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
 textarea{resize:vertical;min-height:64px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 10px}
+.grid2>label,.grid3>label{min-width:0}
+/* iPhoneの日付欄は、幅を指定しても枠からはみ出すことがある。幅の下限をなくして、見た目を整える */
+input[type=date]{display:block;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;height:42px;line-height:normal;text-align:left}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
+select{min-width:0;max-width:100%}
 .hint{font-size:11.5px;color:var(--sub);margin:-6px 0 10px}
 .warn{color:var(--red)}
 .row{display:grid;grid-template-columns:2.6fr .8fr .7fr 1.1fr .9fr auto;gap:6px;align-items:end;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
@@ -65,7 +70,8 @@ table.s-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8
 }
 @media(max-width:640px){
   body{padding:10px}
-  .grid3{grid-template-columns:1fr 1fr}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid2.s{grid-template-columns:minmax(0,1fr)}
   .row{grid-template-columns:.8fr .8fr 1.5fr 1.3fr;}
   .row .nameL{grid-column:1/-1}
   .row .del{grid-column:1/-1;width:100%;height:34px}
@@ -113,11 +119,11 @@ table.s-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8
 
     <div class="card">
       <h2>③ 請求書の情報</h2>
-      <div class="grid2">
+      <div class="grid2 s">
         <label>請求書番号<input data-k="number" placeholder="INV-0001"></label>
         <label>発行日<input data-k="issueDate" type="date"></label>
       </div>
-      <div class="grid2">
+      <div class="grid2 s">
         <label>支払期限<input data-k="dueDate" type="date"></label>
         <label>消費税の端数処理<select data-k="rounding"><option value="floor">切り捨て</option><option value="round">四捨五入</option><option value="ceil">切り上げ</option></select></label>
       </div>
