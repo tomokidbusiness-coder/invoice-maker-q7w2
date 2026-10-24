@@ -64,6 +64,9 @@ table.s-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8
 .s-box b{display:block;margin-bottom:2px}
 .s-note{white-space:pre-wrap}
 .s-foot{font-size:11px;color:#555;margin-top:8px}
+#shareArea{border:2px solid var(--blue);background:var(--blueL);border-radius:12px;padding:12px;margin-bottom:12px}
+#shareArea .btn{width:100%;margin-bottom:8px}
+#shareArea a{display:block;text-align:center;font-size:13px;color:var(--blue)}
 @media(max-width:980px){
   .layout{grid-template-columns:1fr}
   .previewWrap{position:static}
@@ -167,6 +170,10 @@ table.s-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8
       <button class="btn" type="button" id="print">印刷 / きれいなPDFで保存</button>
     </div>
     <p class="muted" id="msg" style="margin-bottom:10px">「印刷」を押すと、保存先で「PDFに保存」を選べます(文字が選択できる、きれいなPDFになります)。</p>
+    <div id="shareArea" hidden>
+      <button class="btn primary" type="button" id="shareBtn">共有 / ファイルに保存</button>
+      <a id="openPdf" target="_blank" rel="noopener">PDFを開く(別のタブで表示)</a>
+    </div>
     <div id="scaler"><div id="sheet"></div></div>
   </section>
 </main>
@@ -358,11 +365,40 @@ const pdfFrom = canvas => window.html2pdf().set({
 }).from(canvas, 'canvas');
 window.__makeCanvas = () => atTop(renderCanvas);
 window.__makePdfBlob = () => atTop(async () => pdfFrom(await renderCanvas()).outputPdf('blob'));
+// スマホ(タッチ操作)で、ファイルの共有に対応しているときは、作ったあとに「共有 / ファイルに保存」ボタンを出す。
+// (iPhoneは、ボタンを押した直後でないと共有画面を出せないため、作る操作と共有の操作を分けている)
+const wantsShare = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.share);
+let lastPdf = null, lastUrl = null;
+function showShare(file) {
+  lastPdf = file;
+  if (lastUrl) URL.revokeObjectURL(lastUrl);
+  lastUrl = URL.createObjectURL(file);
+  $('openPdf').href = lastUrl;
+  $('shareArea').hidden = false;
+  $('shareArea').scrollIntoView({block: 'nearest'});
+  $('msg').textContent = 'PDFができました。下の「共有 / ファイルに保存」を押して、「"ファイル"に保存」などを選んでください。';
+}
+$('shareBtn').addEventListener('click', async () => {
+  if (!lastPdf) return;
+  try {
+    await navigator.share({files: [lastPdf], title: lastPdf.name});
+    $('msg').textContent = '共有の画面を閉じました。保存できたかは、「ファイル」アプリのダウンロードなどで確認してください。';
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    $('msg').textContent = '共有できませんでした(' + (err && err.message) + ')。下の「PDFを開く」から、共有ボタンで保存してください。';
+  }
+});
 $('dl').addEventListener('click', async () => {
   const btn = $('dl'); const label = btn.textContent;
   btn.disabled = true; btn.textContent = '作成中…';
+  $('shareArea').hidden = true;
   try {
     if (!window.html2pdf || !window.html2canvas) throw new Error('PDFの部品を読み込めませんでした');
+    if (wantsShare()) {
+      const blob = await atTop(async () => pdfFrom(await renderCanvas()).outputPdf('blob'));
+      const file = new File([blob], fileName(), {type: 'application/pdf'});
+      if (navigator.canShare({files: [file]})) { showShare(file); return; }
+    }
     await atTop(async () => { await pdfFrom(await renderCanvas()).save(); });
     $('msg').textContent = 'PDFを保存しました(ダウンロードフォルダを確認してください)。';
   } catch (err) {
