@@ -189,7 +189,7 @@ const emptyRow = () => ({name: '', qty: '', unit: '', price: '', rate: '10'});
 const defaults = () => ({
   issuerName: '', issuerZip: '', issuerAddr: '', issuerTel: '', issuerMail: '', regNo: '',
   clientName: '', honorific: '御中', number: '', issueDate: today(), dueDate: '', subject: '',
-  rounding: 'floor', rows: [emptyRow()],
+  rounding: 'round', rows: [emptyRow()],
   bankName: '', bankBranch: '', bankType: '普通', bankNo: '', bankHolder: '', note: ''
 });
 let s = defaults();
